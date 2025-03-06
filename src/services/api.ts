@@ -1,8 +1,8 @@
 
 import { toast } from "sonner";
 
-// Base API URL - should come from environment variables in production
-const API_BASE_URL = "https://api.adsynth.app"; // Replace with actual base URL
+// Base API URL - updated to use localhost:8000
+const API_BASE_URL = "http://localhost:8000"; // Updated to use localhost development server
 
 // Types
 export interface User {

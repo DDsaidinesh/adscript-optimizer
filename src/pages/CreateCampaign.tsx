@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -35,14 +34,11 @@ const CreateCampaign = () => {
     
     try {
       setIsLoading(true);
-      // In production, this would actually call the API
-      // const campaign = await api.campaigns.create(formData);
+      const campaign = await api.campaigns.create(formData);
       
-      // Mock successful response
       toast.success("Campaign created successfully");
       
-      // Navigate to the mock campaign detail page
-      navigate("/campaigns/1");
+      navigate(`/campaigns/${campaign.id}`);
     } catch (error) {
       console.error("Error creating campaign:", error);
       // Toast is shown by api.handleResponse

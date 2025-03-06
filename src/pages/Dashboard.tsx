@@ -7,52 +7,16 @@ import { Button } from "@/components/ui/button";
 import AuthLayout from "@/components/AuthLayout";
 import CampaignCard from "@/components/CampaignCard";
 import { api, Campaign } from "@/services/api";
+import { useQuery } from "@tanstack/react-query";
 
 const Dashboard = () => {
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchCampaigns = async () => {
-      try {
-        // Mock data for the preview
-        // In production, this would be: const data = await api.campaigns.list();
-        const mockData: Campaign[] = [
-          {
-            id: 1,
-            user_id: 1,
-            product_name: "SleepWell Mattress",
-            product_description: "Premium memory foam mattress designed for optimal comfort and support.",
-            target_audience: "Adults 25-45 with back pain issues and sleep problems",
-            key_use_cases: "Better sleep, back pain relief, improved posture",
-            campaign_goal: "Increase online sales",
-            niche: "Health & Wellness",
-            created_at: "2024-05-01T10:30:00Z",
-            updated_at: "2024-05-01T10:30:00Z",
-          },
-          {
-            id: 2,
-            user_id: 1,
-            product_name: "FocusBoost Pro",
-            product_description: "Nootropic supplement that improves focus, concentration and mental clarity.",
-            target_audience: "Students, professionals, and creative workers who need to focus for long periods",
-            key_use_cases: "Exam preparation, work productivity, creative projects",
-            campaign_goal: "Generate leads for subscription service",
-            niche: "Productivity",
-            created_at: "2024-05-10T15:45:00Z",
-            updated_at: "2024-05-10T15:45:00Z",
-          },
-        ];
-        setCampaigns(mockData);
-      } catch (error) {
-        console.error("Error fetching campaigns:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchCampaigns();
-  }, []);
+  const { data: campaigns = [], isLoading } = useQuery({
+    queryKey: ['campaigns'],
+    queryFn: api.campaigns.list,
+    onError: (error) => {
+      console.error("Error fetching campaigns:", error);
+    },
+  });
 
   return (
     <AuthLayout>

@@ -1,5 +1,4 @@
-
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import { ArrowLeft, Copy, Edit, Trash2, Plus, Loader2 } from "lucide-react";
@@ -24,18 +23,16 @@ import {
 import AuthLayout from "@/components/AuthLayout";
 import AdScriptCard from "@/components/AdScriptCard";
 import { api, Campaign, AdScript } from "@/services/api";
+import { useQuery } from "@tanstack/react-query";
 
 const CampaignDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [campaign, setCampaign] = useState<Campaign | null>(null);
-  const [adScripts, setAdScripts] = useState<AdScript[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState("");
   const [selectedModel, setSelectedModel] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Get available providers and models
   const providers = api.llmProviders.getProviders();
@@ -43,69 +40,41 @@ const CampaignDetail = () => {
     ? providers.find((p) => p.name === selectedProvider)?.models || []
     : [];
 
-  useEffect(() => {
-    const fetchCampaignData = async () => {
-      if (!id) return;
-      
-      try {
-        setIsLoading(true);
-        // Mock data for preview
-        // In production: const campaignData = await api.campaigns.get(Number(id));
-        const mockCampaign: Campaign = {
-          id: 1,
-          user_id: 1,
-          product_name: "SleepWell Mattress",
-          product_description: "Premium memory foam mattress designed for optimal comfort and support. Our innovative technology adapts to your body shape, providing personalized support for a better night's sleep.",
-          target_audience: "Adults 25-45 with back pain issues and sleep problems, particularly professionals who spend long hours sitting at a desk.",
-          key_use_cases: "Better sleep, back pain relief, improved posture, reduced partner disturbance, temperature regulation",
-          campaign_goal: "Increase online sales through targeted social media advertising",
-          niche: "Health & Wellness",
-          created_at: "2024-05-01T10:30:00Z",
-          updated_at: "2024-05-01T10:30:00Z",
-        };
-        setCampaign(mockCampaign);
+  // Fetch campaign data
+  const { 
+    data: campaign, 
+    isLoading: isCampaignLoading 
+  } = useQuery({
+    queryKey: ['campaign', id],
+    queryFn: () => api.campaigns.get(Number(id)),
+    enabled: !!id,
+    onError: (error) => {
+      console.error("Error fetching campaign data:", error);
+      toast.error("Failed to load campaign details");
+    }
+  });
 
-        // Mock ad scripts
-        // In production: const scripts = await api.adScripts.getByCampaign(Number(id));
-        const mockScripts: AdScript[] = [
-          {
-            id: 1,
-            campaign_id: 1,
-            provider: "openai",
-            model: "gpt-4",
-            content: "\"I used to wake up with back pain every morning until I tried the SleepWell Mattress. Its adaptive memory foam contours to my body perfectly, giving me support exactly where I need it. After just one week, my back pain decreased significantly, and now I wake up feeling refreshed instead of sore. The motion isolation is incredible too - I don't feel a thing when my partner gets up during the night. Best investment I've made for my health in years!\"",
-            reddit_references: [
-              {
-                title: "Finally found relief for my chronic back pain",
-                content: "After years of suffering, I finally invested in a good mattress and it's changed everything.",
-                url: "https://reddit.com/r/BackPain/comments/example1",
-              },
-              {
-                title: "Do memory foam mattresses really help with back issues?",
-                content: "Looking for honest experiences from people who've tried them for back problems",
-                url: "https://reddit.com/r/AskReddit/comments/example2",
-              },
-            ],
-            created_at: "2024-05-02T14:25:00Z",
-          },
-        ];
-        setAdScripts(mockScripts);
-      } catch (error) {
-        console.error("Error fetching campaign data:", error);
-        toast.error("Failed to load campaign details");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // Fetch ad scripts
+  const { 
+    data: adScripts = [], 
+    isLoading: isScriptsLoading,
+    refetch: refetchAdScripts
+  } = useQuery({
+    queryKey: ['adScripts', id],
+    queryFn: () => api.adScripts.getByCampaign(Number(id)),
+    enabled: !!id,
+    onError: (error) => {
+      console.error("Error fetching ad scripts:", error);
+    }
+  });
 
-    fetchCampaignData();
-  }, [id]);
+  const isLoading = isCampaignLoading || isScriptsLoading;
 
   const handleDeleteCampaign = async () => {
     if (!campaign) return;
     
     try {
-      // In production: await api.campaigns.delete(campaign.id);
+      await api.campaigns.delete(campaign.id);
       toast.success("Campaign deleted successfully");
       navigate("/campaigns");
     } catch (error) {
@@ -119,31 +88,15 @@ const CampaignDetail = () => {
     
     try {
       setIsGenerating(true);
-      // In production:
-      // const newScript = await api.adScripts.generate(
-      //   campaign.id,
-      //   selectedProvider,
-      //   selectedModel
-      // );
+      await api.adScripts.generate(
+        campaign.id,
+        selectedProvider,
+        selectedModel
+      );
       
-      // Mock new script
-      const newScript: AdScript = {
-        id: adScripts.length + 1,
-        campaign_id: campaign.id,
-        provider: selectedProvider,
-        model: selectedModel,
-        content: "\"Struggling with sleep? You're not alone. I spent years tossing and turning, waking up with a sore back until I discovered the SleepWell Mattress. The difference was immediate - its adaptive memory foam technology actually responds to your body, providing support exactly where you need it most. Within a week, my back pain had virtually disappeared, and I was sleeping through the night for the first time in years. My partner doesn't disturb me anymore when they get up, and the temperature regulation keeps me comfortable all night. Stop compromising on your sleep quality - your body deserves better!\"",
-        reddit_references: [
-          {
-            title: "What finally fixed your sleep problems?",
-            content: "After trying everything from melatonin to meditation, a quality mattress was what I actually needed",
-            url: "https://reddit.com/r/AskReddit/comments/example3",
-          },
-        ],
-        created_at: new Date().toISOString(),
-      };
+      // Refetch ad scripts after generating a new one
+      await refetchAdScripts();
       
-      setAdScripts((prev) => [newScript, ...prev]);
       setGenerateDialogOpen(false);
       toast.success("Ad script generated successfully");
     } catch (error) {
