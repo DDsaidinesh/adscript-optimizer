@@ -13,13 +13,21 @@ const Campaigns = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredCampaigns, setFilteredCampaigns] = useState<Campaign[]>([]);
   
-  const { data: campaigns = [], isLoading } = useQuery({
+  const { 
+    data: campaigns = [], 
+    isLoading,
+    error 
+  } = useQuery({
     queryKey: ['campaigns'],
     queryFn: api.campaigns.list,
-    onError: (error) => {
-      console.error("Error fetching campaigns:", error);
-    },
   });
+
+  // If needed, we can handle errors with the error variable
+  useEffect(() => {
+    if (error) {
+      console.error("Error fetching campaigns:", error);
+    }
+  }, [error]);
 
   useEffect(() => {
     if (searchQuery.trim() === "") {

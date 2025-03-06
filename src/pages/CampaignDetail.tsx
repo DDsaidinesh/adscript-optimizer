@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import { ArrowLeft, Copy, Edit, Trash2, Plus, Loader2 } from "lucide-react";
@@ -43,30 +44,40 @@ const CampaignDetail = () => {
   // Fetch campaign data
   const { 
     data: campaign, 
-    isLoading: isCampaignLoading 
+    isLoading: isCampaignLoading,
+    error: campaignError
   } = useQuery({
     queryKey: ['campaign', id],
     queryFn: () => api.campaigns.get(Number(id)),
     enabled: !!id,
-    onError: (error) => {
-      console.error("Error fetching campaign data:", error);
+  });
+
+  // Handle campaign fetch error
+  useEffect(() => {
+    if (campaignError) {
+      console.error("Error fetching campaign data:", campaignError);
       toast.error("Failed to load campaign details");
     }
-  });
+  }, [campaignError]);
 
   // Fetch ad scripts
   const { 
     data: adScripts = [], 
     isLoading: isScriptsLoading,
-    refetch: refetchAdScripts
+    refetch: refetchAdScripts,
+    error: scriptsError
   } = useQuery({
     queryKey: ['adScripts', id],
     queryFn: () => api.adScripts.getByCampaign(Number(id)),
     enabled: !!id,
-    onError: (error) => {
-      console.error("Error fetching ad scripts:", error);
-    }
   });
+
+  // Handle scripts fetch error
+  useEffect(() => {
+    if (scriptsError) {
+      console.error("Error fetching ad scripts:", scriptsError);
+    }
+  }, [scriptsError]);
 
   const isLoading = isCampaignLoading || isScriptsLoading;
 

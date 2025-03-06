@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Plus } from "lucide-react";
@@ -13,9 +12,6 @@ const Dashboard = () => {
   const { data: campaigns = [], isLoading } = useQuery({
     queryKey: ['campaigns'],
     queryFn: api.campaigns.list,
-    onError: (error) => {
-      console.error("Error fetching campaigns:", error);
-    },
   });
 
   return (
