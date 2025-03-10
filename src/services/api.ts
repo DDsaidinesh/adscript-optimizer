@@ -40,6 +40,7 @@ export interface AdScript {
   campaign_id: number;
   provider: string;
   model: string;
+  platform: string;
   content: string;
   reddit_references: RedditReference[];
   created_at: string;
@@ -185,12 +186,13 @@ export const api = {
     generate: async (
       campaign_id: number, 
       provider: string, 
-      model: string
+      model: string,
+      platform: string
     ): Promise<AdScript> => {
       const response = await fetch(`${API_BASE_URL}/api/ad-scripts/generate`, {
         method: "POST",
         headers: api.authHeaders(),
-        body: JSON.stringify({ campaign_id, provider, model }),
+        body: JSON.stringify({ campaign_id, provider, model, platform }),
       });
       
       return api.handleResponse(response);

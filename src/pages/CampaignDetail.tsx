@@ -31,6 +31,7 @@ const CampaignDetail = () => {
   const navigate = useNavigate();
   const [selectedProvider, setSelectedProvider] = useState("");
   const [selectedModel, setSelectedModel] = useState("");
+  const [selectedPlatform, setSelectedPlatform] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -40,6 +41,9 @@ const CampaignDetail = () => {
   const models = selectedProvider
     ? providers.find((p) => p.name === selectedProvider)?.models || []
     : [];
+    
+  // Social media platforms
+  const platforms = ["instagram", "youtube", "facebook", "linkedin", "twitter"];
 
   // Fetch campaign data
   const { 
@@ -95,14 +99,15 @@ const CampaignDetail = () => {
   };
 
   const handleGenerateAdScript = async () => {
-    if (!campaign || !selectedProvider || !selectedModel) return;
+    if (!campaign || !selectedProvider || !selectedModel || !selectedPlatform) return;
     
     try {
       setIsGenerating(true);
       await api.adScripts.generate(
         campaign.id,
         selectedProvider,
-        selectedModel
+        selectedModel,
+        selectedPlatform
       );
       
       // Refetch ad scripts after generating a new one
@@ -272,7 +277,7 @@ const CampaignDetail = () => {
                   <DialogHeader>
                     <DialogTitle>Generate Ad Script</DialogTitle>
                     <DialogDescription>
-                      Select an AI provider and model to generate your ad script.
+                      Select an AI provider, model, and platform to generate your ad script.
                     </DialogDescription>
                   </DialogHeader>
                   
@@ -319,6 +324,27 @@ const CampaignDetail = () => {
                         </SelectContent>
                       </Select>
                     </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">
+                        Platform
+                      </label>
+                      <Select
+                        value={selectedPlatform}
+                        onValueChange={setSelectedPlatform}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select platform" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {platforms.map((platform) => (
+                            <SelectItem key={platform} value={platform}>
+                              {platform.charAt(0).toUpperCase() + platform.slice(1)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                   
                   <DialogFooter>
@@ -327,7 +353,7 @@ const CampaignDetail = () => {
                     </Button>
                     <Button
                       onClick={handleGenerateAdScript}
-                      disabled={!selectedProvider || !selectedModel || isGenerating}
+                      disabled={!selectedProvider || !selectedModel || !selectedPlatform || isGenerating}
                     >
                       {isGenerating ? (
                         <>
