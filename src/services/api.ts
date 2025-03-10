@@ -40,7 +40,7 @@ export interface AdScript {
   campaign_id: number;
   provider: string;
   model: string;
-  platform: string;
+  platform?: string; // Made platform optional
   content: string;
   reddit_references: RedditReference[];
   created_at: string;
@@ -187,12 +187,17 @@ export const api = {
       campaign_id: number, 
       provider: string, 
       model: string,
-      platform: string
+      platform?: string // Made platform optional
     ): Promise<AdScript> => {
       const response = await fetch(`${API_BASE_URL}/api/ad-scripts/generate`, {
         method: "POST",
         headers: api.authHeaders(),
-        body: JSON.stringify({ campaign_id, provider, model, platform }),
+        body: JSON.stringify({ 
+          campaign_id, 
+          provider, 
+          model, 
+          platform: platform === "all" ? "none" : platform // Send "none" if "all" is selected
+        }),
       });
       
       return api.handleResponse(response);

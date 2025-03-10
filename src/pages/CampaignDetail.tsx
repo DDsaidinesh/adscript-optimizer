@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
@@ -42,8 +41,8 @@ const CampaignDetail = () => {
     ? providers.find((p) => p.name === selectedProvider)?.models || []
     : [];
     
-  // Social media platforms
-  const platforms = ["instagram", "youtube", "facebook", "linkedin", "twitter"];
+  // Social media platforms with "all" option
+  const platforms = ["all", "instagram", "youtube", "facebook", "linkedin", "twitter"];
 
   // Fetch campaign data
   const { 
@@ -99,7 +98,7 @@ const CampaignDetail = () => {
   };
 
   const handleGenerateAdScript = async () => {
-    if (!campaign || !selectedProvider || !selectedModel || !selectedPlatform) return;
+    if (!campaign || !selectedProvider || !selectedModel) return;
     
     try {
       setIsGenerating(true);
@@ -107,7 +106,7 @@ const CampaignDetail = () => {
         campaign.id,
         selectedProvider,
         selectedModel,
-        selectedPlatform
+        selectedPlatform || undefined
       );
       
       // Refetch ad scripts after generating a new one
@@ -334,12 +333,14 @@ const CampaignDetail = () => {
                         onValueChange={setSelectedPlatform}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select platform" />
+                          <SelectValue placeholder="Select platform (optional)" />
                         </SelectTrigger>
                         <SelectContent>
                           {platforms.map((platform) => (
                             <SelectItem key={platform} value={platform}>
-                              {platform.charAt(0).toUpperCase() + platform.slice(1)}
+                              {platform === "all" 
+                                ? "All Platforms" 
+                                : platform.charAt(0).toUpperCase() + platform.slice(1)}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -353,7 +354,7 @@ const CampaignDetail = () => {
                     </Button>
                     <Button
                       onClick={handleGenerateAdScript}
-                      disabled={!selectedProvider || !selectedModel || !selectedPlatform || isGenerating}
+                      disabled={!selectedProvider || !selectedModel || isGenerating}
                     >
                       {isGenerating ? (
                         <>
