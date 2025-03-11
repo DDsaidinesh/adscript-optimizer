@@ -34,17 +34,15 @@ const CampaignDetail = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [loadingStep, setLoadingStep] = useState("");
 
-  // Get available providers and models
   const providers = api.llmProviders.getProviders();
   const models = selectedProvider
     ? providers.find((p) => p.name === selectedProvider)?.models || []
     : [];
     
-  // Social media platforms with "all" option
   const platforms = ["all", "instagram", "youtube", "facebook", "linkedin", "twitter"];
 
-  // Fetch campaign data
   const { 
     data: campaign, 
     isLoading: isCampaignLoading,
@@ -55,7 +53,6 @@ const CampaignDetail = () => {
     enabled: !!id,
   });
 
-  // Handle campaign fetch error
   useEffect(() => {
     if (campaignError) {
       console.error("Error fetching campaign data:", campaignError);
@@ -63,7 +60,6 @@ const CampaignDetail = () => {
     }
   }, [campaignError]);
 
-  // Fetch ad scripts
   const { 
     data: adScripts = [], 
     isLoading: isScriptsLoading,
@@ -75,12 +71,31 @@ const CampaignDetail = () => {
     enabled: !!id,
   });
 
-  // Handle scripts fetch error
   useEffect(() => {
     if (scriptsError) {
       console.error("Error fetching ad scripts:", scriptsError);
     }
   }, [scriptsError]);
+
+  useEffect(() => {
+    let timeoutId: number;
+    if (isGenerating) {
+      let currentStep = 0;
+      
+      const rotateSteps = () => {
+        setLoadingStep(loadingSteps[currentStep]);
+        currentStep = (currentStep + 1) % loadingSteps.length;
+        timeoutId = window.setTimeout(rotateSteps, 2500);
+      };
+      
+      rotateSteps();
+    }
+    
+    return () => {
+      window.clearTimeout(timeoutId);
+      setLoadingStep("");
+    };
+  }, [isGenerating]);
 
   const isLoading = isCampaignLoading || isScriptsLoading;
 
@@ -109,7 +124,6 @@ const CampaignDetail = () => {
         selectedPlatform || undefined
       );
       
-      // Refetch ad scripts after generating a new one
       await refetchAdScripts();
       
       setGenerateDialogOpen(false);
@@ -156,6 +170,15 @@ const CampaignDetail = () => {
       </AuthLayout>
     );
   }
+
+  const loadingSteps = [
+    "Scraping data from Reddit...",
+    "Analyzing audience sentiment...",
+    "Identifying pain points...",
+    "Researching market trends...",
+    "Crafting persuasive content...",
+    "Preparing final script..."
+  ];
 
   return (
     <AuthLayout>
@@ -366,6 +389,21 @@ const CampaignDetail = () => {
                       )}
                     </Button>
                   </DialogFooter>
+                  
+                  {isGenerating && (
+                    <div className="mt-4 p-4 border border-primary/20 rounded-md bg-primary/5 animate-pulse">
+                      <div className="flex items-center">
+                        <div className="mr-3 flex-shrink-0">
+                          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                        </div>
+                        <div className="min-h-[28px] flex items-center">
+                          <p className="text-sm transition-opacity duration-200">
+                            {loadingStep}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </DialogContent>
               </Dialog>
             </CardContent>
