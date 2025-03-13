@@ -332,9 +332,9 @@ const CampaignDetail = () => {
                                     {provider.name.charAt(0).toUpperCase() + provider.name.slice(1)}
                                   </span>
                                   {!isAvailable && (
-                                    <Badge variant="outline" className="ml-2 bg-secondary/20 text-xs">
-                                      Coming Soon
-                                    </Badge>
+                                    <span className="ml-2 text-xs text-muted-foreground">
+                                      Soon
+                                    </span>
                                   )}
                                 </div>
                               </SelectItem>
@@ -369,9 +369,9 @@ const CampaignDetail = () => {
                                 <div className="flex items-center justify-between w-full">
                                   <span>{model}</span>
                                   {!isAvailable && (
-                                    <Badge variant="outline" className="ml-2 bg-secondary/20 text-xs">
-                                      Coming Soon
-                                    </Badge>
+                                    <span className="ml-2 text-xs text-muted-foreground">
+                                      Soon
+                                    </span>
                                   )}
                                 </div>
                               </SelectItem>
