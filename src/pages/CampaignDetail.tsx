@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
@@ -20,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import AuthLayout from "@/components/AuthLayout";
 import AdScriptCard from "@/components/AdScriptCard";
 import { api, Campaign, AdScript } from "@/services/api";
@@ -316,11 +318,28 @@ const CampaignDetail = () => {
                           <SelectValue placeholder="Select provider" />
                         </SelectTrigger>
                         <SelectContent>
-                          {providers.map((provider) => (
-                            <SelectItem key={provider.name} value={provider.name}>
-                              {provider.name.charAt(0).toUpperCase() + provider.name.slice(1)}
-                            </SelectItem>
-                          ))}
+                          {providers.map((provider) => {
+                            const isAvailable = provider.name === "openai";
+                            return (
+                              <SelectItem 
+                                key={provider.name} 
+                                value={provider.name}
+                                disabled={!isAvailable}
+                                className={!isAvailable ? "opacity-60" : ""}
+                              >
+                                <div className="flex items-center justify-between w-full">
+                                  <span>
+                                    {provider.name.charAt(0).toUpperCase() + provider.name.slice(1)}
+                                  </span>
+                                  {!isAvailable && (
+                                    <Badge variant="outline" className="ml-2 bg-secondary/20 text-xs">
+                                      Coming Soon
+                                    </Badge>
+                                  )}
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
                         </SelectContent>
                       </Select>
                     </div>
@@ -338,11 +357,26 @@ const CampaignDetail = () => {
                           <SelectValue placeholder="Select model" />
                         </SelectTrigger>
                         <SelectContent>
-                          {models.map((model) => (
-                            <SelectItem key={model} value={model}>
-                              {model}
-                            </SelectItem>
-                          ))}
+                          {models.map((model) => {
+                            const isAvailable = selectedProvider === "openai" && model === "gpt-4o";
+                            return (
+                              <SelectItem 
+                                key={model} 
+                                value={model}
+                                disabled={!isAvailable}
+                                className={!isAvailable ? "opacity-60" : ""}
+                              >
+                                <div className="flex items-center justify-between w-full">
+                                  <span>{model}</span>
+                                  {!isAvailable && (
+                                    <Badge variant="outline" className="ml-2 bg-secondary/20 text-xs">
+                                      Coming Soon
+                                    </Badge>
+                                  )}
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
                         </SelectContent>
                       </Select>
                     </div>
