@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
@@ -37,6 +36,7 @@ const CampaignDetail = () => {
   const [selectedPlatform, setSelectedPlatform] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
+  const [generateCaptionsDialogOpen, setGenerateCaptionsDialogOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [loadingStep, setLoadingStep] = useState("");
   const [progress, setProgress] = useState(0);
@@ -47,6 +47,8 @@ const CampaignDetail = () => {
     : [];
     
   const platforms = ["all", "instagram", "youtube", "facebook", "linkedin", "twitter"];
+  const adPlatforms = ["all", "youtube", "facebook"];
+  const captionPlatforms = ["instagram", "linkedin", "twitter"];
 
   const { 
     data: campaign, 
@@ -138,6 +140,35 @@ const CampaignDetail = () => {
       toast.success("Ad script generated successfully");
     } catch (error) {
       console.error("Error generating ad script:", error);
+      // Toast handled by api.handleResponse
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleGenerateCaptions = async () => {
+    if (!campaign || !selectedProvider || !selectedModel) return;
+    
+    try {
+      setIsGenerating(true);
+      
+      for (const platform of captionPlatforms) {
+        if (selectedPlatform === "all" || selectedPlatform === platform) {
+          await api.adScripts.generate(
+            campaign.id,
+            selectedProvider,
+            selectedModel,
+            platform
+          );
+        }
+      }
+      
+      await refetchAdScripts();
+      
+      setGenerateCaptionsDialogOpen(false);
+      toast.success("Social media captions generated successfully");
+    } catch (error) {
+      console.error("Error generating captions:", error);
       // Toast handled by api.handleResponse
     } finally {
       setIsGenerating(false);
@@ -290,12 +321,12 @@ const CampaignDetail = () => {
 
           <Card className="glass-card animate-slide-up" style={{ animationDelay: "0.1s" }}>
             <CardHeader>
-              <CardTitle>Generate Ad Script</CardTitle>
+              <CardTitle>Generate Content</CardTitle>
               <CardDescription>
-                Create a new ad script using AI
+                Create new content using AI
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <Dialog open={generateDialogOpen} onOpenChange={setGenerateDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="w-full">
@@ -399,10 +430,10 @@ const CampaignDetail = () => {
                           <SelectValue placeholder="Select platform (optional)" />
                         </SelectTrigger>
                         <SelectContent>
-                          {platforms.map((platform) => (
+                          {adPlatforms.map((platform) => (
                             <SelectItem key={platform} value={platform}>
                               {platform === "all" 
-                                ? "All Platforms" 
+                                ? "All Ad Platforms" 
                                 : platform.charAt(0).toUpperCase() + platform.slice(1)}
                             </SelectItem>
                           ))}
@@ -452,6 +483,162 @@ const CampaignDetail = () => {
                   )}
                 </DialogContent>
               </Dialog>
+              
+              <Dialog open={generateCaptionsDialogOpen} onOpenChange={setGenerateCaptionsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="w-full" variant="secondary">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Generate Captions
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Generate Social Media Captions</DialogTitle>
+                    <DialogDescription>
+                      Select an AI provider and model to generate captions for Instagram, LinkedIn, and Twitter.
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">
+                        Provider
+                      </label>
+                      <Select
+                        value={selectedProvider}
+                        onValueChange={setSelectedProvider}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select provider" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {providers.map((provider) => {
+                            const isAvailable = provider.name === "openai";
+                            return (
+                              <SelectItem 
+                                key={provider.name} 
+                                value={provider.name}
+                                disabled={!isAvailable}
+                                className={!isAvailable ? "opacity-60" : ""}
+                              >
+                                <div className="flex items-center justify-between w-full">
+                                  <span>
+                                    {provider.name.charAt(0).toUpperCase() + provider.name.slice(1)}
+                                  </span>
+                                  {!isAvailable && (
+                                    <span className="ml-2 text-xs text-muted-foreground">
+                                      Soon
+                                    </span>
+                                  )}
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">
+                        Model
+                      </label>
+                      <Select
+                        value={selectedModel}
+                        onValueChange={setSelectedModel}
+                        disabled={!selectedProvider}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select model" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {models.map((model) => {
+                            const isAvailable = selectedProvider === "openai" && model === "gpt-4o";
+                            return (
+                              <SelectItem 
+                                key={model} 
+                                value={model}
+                                disabled={!isAvailable}
+                                className={!isAvailable ? "opacity-60" : ""}
+                              >
+                                <div className="flex items-center justify-between w-full">
+                                  <span>{model}</span>
+                                  {!isAvailable && (
+                                    <span className="ml-2 text-xs text-muted-foreground">
+                                      Soon
+                                    </span>
+                                  )}
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">
+                        Platforms
+                      </label>
+                      <Select
+                        value={selectedPlatform}
+                        onValueChange={setSelectedPlatform}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select platforms" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Social Platforms</SelectItem>
+                          {captionPlatforms.map((platform) => (
+                            <SelectItem key={platform} value={platform}>
+                              {platform.charAt(0).toUpperCase() + platform.slice(1)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setGenerateCaptionsDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleGenerateCaptions}
+                      disabled={!selectedProvider || !selectedModel || isGenerating}
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        "Generate"
+                      )}
+                    </Button>
+                  </DialogFooter>
+                  
+                  {isGenerating && (
+                    <div className="mt-4">
+                      <Alert className="bg-primary/5 border-primary/20">
+                        <Bot className="h-5 w-5 text-primary animate-pulse" />
+                        <AlertTitle className="text-primary mb-2">Our agents are working on your captions</AlertTitle>
+                        <AlertDescription className="text-sm">
+                          <div className="mb-3">
+                            {loadingStep}
+                          </div>
+                          <Progress value={progress} className="h-2" />
+                          <div className="flex items-center gap-2 mt-4 text-muted-foreground">
+                            <Bell className="h-4 w-4" />
+                            <p className="text-xs">
+                              You can close this dialog. We'll notify you when your captions are ready!
+                            </p>
+                          </div>
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                  )}
+                </DialogContent>
+              </Dialog>
             </CardContent>
           </Card>
         </div>
@@ -477,10 +664,16 @@ const CampaignDetail = () => {
                 <p className="text-muted-foreground mb-6">
                   Generate your first ad script for this campaign
                 </p>
-                <Button onClick={() => setGenerateDialogOpen(true)}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Generate Ad Script
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Button onClick={() => setGenerateDialogOpen(true)}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Generate Ad Script
+                  </Button>
+                  <Button variant="secondary" onClick={() => setGenerateCaptionsDialogOpen(true)}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Generate Captions
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )}
