@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 
 // Base API URL - updated to use localhost:8000
@@ -43,6 +42,15 @@ export interface AdScript {
   platform?: string; // Made platform optional
   content: string;
   reddit_references: RedditReference[];
+  created_at: string;
+}
+
+export interface Video {
+  id: string;
+  ad_script_id: number;
+  status: "pending" | "processing" | "completed" | "failed";
+  format: "vertical" | "horizontal";
+  url?: string;
   created_at: string;
 }
 
@@ -212,8 +220,44 @@ export const api = {
     },
   },
 
-  // LLM providers - mock data for demonstration
-  // In production, this would come from an endpoint
+  // Video endpoints
+  videos: {
+    generate: async (
+      ad_script_id: number,
+      video_format: "vertical" | "horizontal",
+      background_music?: string
+    ): Promise<{ video_id: string }> => {
+      const response = await fetch(`${API_BASE_URL}/api/video/generate`, {
+        method: "POST",
+        headers: api.authHeaders(),
+        body: JSON.stringify({ 
+          ad_script_id, 
+          video_format, 
+          background_music 
+        }),
+      });
+      
+      return api.handleResponse(response);
+    },
+    
+    getStatus: async (video_id: string): Promise<Video> => {
+      const response = await fetch(`${API_BASE_URL}/api/video/${video_id}`, {
+        headers: api.authHeaders(),
+      });
+      
+      return api.handleResponse(response);
+    },
+    
+    getByAdScript: async (ad_script_id: number): Promise<{ videos: Video[] }> => {
+      const response = await fetch(`${API_BASE_URL}/api/video/list/${ad_script_id}`, {
+        headers: api.authHeaders(),
+      });
+      
+      return api.handleResponse(response);
+    },
+  },
+
+  // LLM providers
   llmProviders: {
     getProviders: (): { name: string; models: string[] }[] => {
       return [
